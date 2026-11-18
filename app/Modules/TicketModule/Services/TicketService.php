@@ -29,7 +29,7 @@ class TicketService implements TicketContract
 
         if (! $ticket || $ticket->quota < $quantity) {
             throw new QuotaFullException(
-                "Kuota tiket '{$ticket?->name}' tidak mencukupi (tersisa: " . ($ticket?->quota ?? 0) . ")."
+                "Kuota tiket '{$ticket?->name}' tidak mencukupi (tersisa: ".($ticket?->quota ?? 0).').'
             );
         }
 

@@ -27,7 +27,7 @@ class RegistrationService
             // Potong kuota melalui Contract (akan melempar QuotaFullException jika kuota kurang)
             $this->ticketContract->reserveQuota($ticketId, $quantity);
 
-            $code = 'TIX-' . strtoupper(Str::random(8));
+            $code = 'TIX-'.strtoupper(Str::random(8));
 
             $payload = [
                 'user_id' => $userId,

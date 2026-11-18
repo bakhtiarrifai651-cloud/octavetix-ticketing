@@ -24,7 +24,7 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             return redirect()->intended('/dashboard')
-                ->with('success', 'Berhasil login! Selamat datang, ' . Auth::user()->name);
+                ->with('success', 'Berhasil login! Selamat datang, '.Auth::user()->name);
         }
 
         return back()->withErrors([

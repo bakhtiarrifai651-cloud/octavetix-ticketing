@@ -1,8 +1,13 @@
 <?php
 
+use App\Modules\EventModule\Providers\EventServiceProvider;
+use App\Modules\RegistrationModule\Providers\RegistrationServiceProvider;
+use App\Modules\TicketModule\Providers\TicketServiceProvider;
+use App\Providers\AppServiceProvider;
+
 return [
-    App\Providers\AppServiceProvider::class,
-    App\Modules\EventModule\Providers\EventServiceProvider::class,
-    App\Modules\TicketModule\Providers\TicketServiceProvider::class,
-    App\Modules\RegistrationModule\Providers\RegistrationServiceProvider::class,
+    AppServiceProvider::class,
+    EventServiceProvider::class,
+    TicketServiceProvider::class,
+    RegistrationServiceProvider::class,
 ];
