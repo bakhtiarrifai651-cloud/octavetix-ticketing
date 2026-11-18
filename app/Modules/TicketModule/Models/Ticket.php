@@ -2,23 +2,19 @@
 
 namespace App\Modules\TicketModule\Models;
 
-use App\Modules\TicketModule\Database\Factories\TicketFactory;
+use App\Modules\EventModule\Models\Event;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Ticket extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'event_id',
-        'name',
-        'price',
-        'quota',
-    ];
+    protected $guarded = ['id'];
 
-    protected static function newFactory()
+    public function event(): BelongsTo
     {
-        return TicketFactory::new();
+        return $this->belongsTo(Event::class);
     }
 }
