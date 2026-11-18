@@ -1,61 +1,57 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="mb-6 flex justify-between items-center">
-    <div>
-        <h1 class="text-2xl font-bold text-gray-800">Tiket Saya</h1>
-        <p class="text-sm text-gray-600">Daftar riwayat pemesanan tiket event Anda.</p>
-    </div>
-    <a href="{{ route('events.index') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm font-medium">
-        + Cari Event Lain
-    </a>
+<div class="mb-8">
+    <h1 class="text-3xl font-black uppercase tracking-tight text-white">Tiket Saya</h1>
+    <p class="text-zinc-400 text-sm mt-1">Tunjukkan kode tiket unik di gerbang masuk venue.</p>
 </div>
 
-<div class="space-y-4">
-    @forelse($registrations as $reg)
-        <div class="bg-white rounded-lg shadow p-6 flex flex-wrap justify-between items-center gap-4 border-l-4 border-indigo-600">
-            <div>
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded uppercase">
-                        {{ $reg->status ?? 'Confirmed' }}
-                    </span>
-                    @if($reg->ticket_code ?? $reg->booking_code)
-                        <span class="text-xs font-mono text-gray-500">Kode: {{ $reg->ticket_code ?? $reg->booking_code }}</span>
-                    @endif
+@if($registrations->isEmpty())
+    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-10 text-center">
+        <p class="text-zinc-400 mb-4">Kamu belum memiliki tiket konser aktif.</p>
+        <a href="{{ route('events.index') }}" class="inline-block px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-bold uppercase rounded-lg transition">
+            Jelajahi Konser
+        </a>
+    </div>
+@else
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        @foreach($registrations as $registration)
+            @php
+                $code = $registration->ticket_code ?? $registration->booking_code ?? '-';
+                $isCancelled = ($registration->status ?? 'confirmed') === 'cancelled';
+            @endphp
+            <div class="bg-zinc-900 border {{ $isCancelled ? 'border-zinc-800 opacity-60' : 'border-red-800/60' }} rounded-xl p-6 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between gap-2 mb-3">
+                        <span class="text-xs font-mono font-bold px-3 py-1 rounded bg-zinc-950 border border-zinc-700 text-red-400">
+                            {{ $code }}
+                        </span>
+                        <span class="text-xs uppercase font-bold px-2.5 py-0.5 rounded {{ $isCancelled ? 'bg-zinc-800 text-zinc-400' : 'bg-emerald-950 text-emerald-400 border border-emerald-800' }}">
+                            {{ $isCancelled ? 'Dibatalkan' : 'Aktif' }}
+                        </span>
+                    </div>
+
+                    <h2 class="text-xl font-bold text-white">{{ $registration->ticket->event->title ?? 'Event' }}</h2>
+                    <p class="text-sm text-red-400 font-semibold mt-1">{{ $registration->ticket->name ?? 'Tiket' }} ({{ $registration->quantity }}x)</p>
+                    <p class="text-xs text-zinc-400 mt-1">{{ $registration->ticket->event->location ?? '-' }}</p>
+
+                    <div class="mt-4 pt-4 border-t border-zinc-800 flex justify-between text-sm">
+                        <span class="text-zinc-400">Total Pembayaran</span>
+                        <span class="font-bold text-white">Rp {{ number_format($registration->total_price, 0, ',', '.') }}</span>
+                    </div>
                 </div>
 
-                <h2 class="text-lg font-bold text-gray-800">
-                    {{ $reg->ticket->event->title ?? 'Event' }}
-                </h2>
-                <p class="text-sm text-gray-600">
-                    Jenis Tiket: <span class="font-semibold">{{ $reg->ticket->name ?? '-' }}</span>
-                    &bull; Jumlah: <span class="font-semibold">{{ $reg->quantity }} tiket</span>
-                </p>
-                @if($reg->ticket?->event)
-                    <p class="text-xs text-gray-500 mt-1">
-                        Jadwal: {{ \Carbon\Carbon::parse($reg->ticket->event->event_date)->format('d M Y, H:i') }} WIB
-                        &bull; Lokasi: {{ $reg->ticket->event->location }}
-                    </p>
+                @if(! $isCancelled)
+                    <form action="{{ route('registrations.destroy', $registration->id) }}" method="POST" class="mt-5" onsubmit="return confirm('Batalkan pesanan tiket ini? Kuota tiket akan dikembalikan.')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="w-full py-2 px-4 bg-zinc-800 hover:bg-red-900/80 text-red-400 hover:text-red-200 border border-zinc-700 hover:border-red-700 text-xs font-bold uppercase tracking-wider rounded-lg transition">
+                            Batalkan Pesanan
+                        </button>
+                    </form>
                 @endif
             </div>
-
-            <div class="text-right">
-                <p class="text-xs text-gray-500">Total Pembayaran</p>
-                <p class="text-xl font-bold text-indigo-700">
-                    Rp {{ number_format($reg->total_price, 0, ',', '.') }}
-                </p>
-                <p class="text-xs text-gray-400 mt-1">
-                    Dipesan: {{ $reg->created_at->format('d M Y, H:i') }}
-                </p>
-            </div>
-        </div>
-    @empty
-        <div class="bg-white rounded-lg shadow p-8 text-center">
-            <p class="text-gray-500 mb-4">Anda belum memiliki tiket event apa pun.</p>
-            <a href="{{ route('events.index') }}" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm font-medium">
-                Jelajahi Event Sekarang
-            </a>
-        </div>
-    @endforelse
-</div>
+        @endforeach
+    </div>
+@endif
 @endsection

@@ -1,84 +1,138 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="mb-4">
-    <a href="{{ route('events.index') }}" class="text-sm text-indigo-600 hover:underline">&larr; Kembali ke Daftar Event</a>
+<div class="mb-5">
+    <a href="{{ route('events.index') }}" class="text-sm text-zinc-400 hover:text-red-400 transition">&larr; Kembali ke Daftar Gigs</a>
 </div>
 
-<div class="bg-white rounded-lg shadow p-6 mb-6">
+<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6">
     <div class="flex flex-wrap gap-2 mb-3">
-        @foreach($event->categories as $category)
-            <span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded">
-                {{ $category->name }}
+        @foreach($event->categories as$category)
+            <span class="bg-red-950/80 text-red-400 border border-red-800/50 text-xs font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded">
+                {{ \$category->name }}
             </span>
         @endforeach
     </div>
 
-    <h1 class="text-2xl font-bold text-gray-800 mb-2">{{ $event->title }}</h1>
-    <p class="text-gray-600 mb-4">{{ $event->description }}</p>
+    <h1 class="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white mb-2">{{ \$event->title }}</h1>
+    <p class="text-zinc-300 text-sm leading-relaxed mb-5">{{ \$event->description }}</p>
 
-    <div class="bg-gray-50 p-4 rounded border text-sm text-gray-700 space-y-1">
-        <p><strong>Jadwal Pelaksanaan:</strong> {{ \Carbon\Carbon::parse($event->event_date)->format('d F Y, H:i') }} WIB</p>
-        <p><strong>Lokasi:</strong> {{ $event->location }}</p>
+    <div class="bg-zinc-950 border border-zinc-800 p-4 rounded-lg text-sm text-zinc-300 space-y-1.5">
+        <p><strong class="text-zinc-100">Jadwal Pelaksanaan:</strong> {{ \Carbon\Carbon::parse(\$event->event_date)->format('d F Y, H:i') }} WIB</p>
+        <p><strong class="text-zinc-100">Lokasi Venue:</strong> {{ \$event->location }}</p>
     </div>
 </div>
 
 {{-- Daftar Tiket (Diambil dari TicketModule via TicketContract) --}}
-<div class="bg-white rounded-lg shadow p-6">
-    <h2 class="text-xl font-bold text-gray-800 mb-4">Pilihan Tiket Tersedia</h2>
+<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6">
+    <h2 class="text-xl font-bold uppercase tracking-wide text-white mb-4">Pilihan Tiket Tersedia</h2>
 
     <div class="space-y-4">
-        @forelse($tickets as $ticket)
-            <div class="border rounded-lg p-4 flex flex-wrap justify-between items-center gap-4">
+        @forelse($tickets as$ticket)
+            <div class="bg-zinc-950 border border-zinc-800 rounded-lg p-4 flex flex-wrap justify-between items-center gap-4">
                 <div>
-                    <h3 class="font-bold text-gray-800">{{ $ticket['name'] }}</h3>
-                    <p class="text-indigo-600 font-semibold">Rp {{ number_format($ticket['price'], 0, ',', '.') }}</p>
-                    <p class="text-xs text-gray-500">Sisa Kuota: <span class="font-bold">{{ $ticket['quota'] }}</span> tiket</p>
+                    <div class="flex items-center gap-2.5">
+                        <h3 class="font-bold text-white text-lg">{{ \$ticket['name'] }}</h3>
+                        @if($ticket['quota'] > 0 &&$ticket['quota'] <= 5)
+                            <span class="bg-amber-950 text-amber-400 border border-amber-700/70 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">
+                                Segera Habis!
+                            </span>
+                        @endif
+                    </div>
+                    <p class="text-red-400 font-bold mt-0.5">Rp {{ number_format(\$ticket['price'], 0, ',', '.') }}</p>
+                    <p class="text-xs text-zinc-400 mt-1">Sisa Kuota: <span class="font-bold text-zinc-200">{{ \$ticket['quota'] }}</span> tiket</p>
                 </div>
 
                 @if(auth()->user()->isAdmin())
-                    <form action="{{ route('tickets.destroy', $ticket['id']) }}" method="POST" onsubmit="return confirm('Hapus jenis tiket ini?')">
+                    <form action="{{ route('tickets.destroy', \$ticket['id']) }}" method="POST" onsubmit="return confirm('Hapus jenis tiket ini?')">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded">
+                        <button type="submit" class="bg-zinc-800 hover:bg-red-900 text-red-400 hover:text-red-200 border border-zinc-700 text-xs font-semibold px-3 py-1.5 rounded-lg transition">
                             Hapus Tiket
                         </button>
                     </form>
                 @else
-                    @if($ticket['quota'] > 0)
+                    @if(\$ticket['quota'] > 0)
                         <form action="/registrations" method="POST" class="flex items-center space-x-2">
                             @csrf
-                            <input type="hidden" name="ticket_id" value="{{ $ticket['id'] }}">
-                            <input type="number" name="quantity" value="1" min="1" max="{{ $ticket['quota'] }}"
-                                class="w-20 border border-gray-300 rounded px-2 py-1 text-sm">
-                            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-1.5 rounded font-medium">
+                            <input type="hidden" name="ticket_id" value="{{ \$ticket['id'] }}">
+                            <input type="number" name="quantity" value="1" min="1" max="{{ \$ticket['quota'] }}"
+                                class="w-20 bg-zinc-900 border border-zinc-700 text-zinc-100 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:border-red-500">
+                            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white text-sm px-4 py-1.5 rounded-lg font-bold uppercase tracking-wider transition">
                                 Pesan Tiket
                             </button>
                         </form>
                     @else
-                        <span class="bg-red-100 text-red-700 text-xs font-semibold px-3 py-1 rounded">Kuota Habis</span>
+                        <span class="bg-zinc-800 text-zinc-400 border border-zinc-700 text-xs font-semibold uppercase px-3 py-1.5 rounded-lg">Kuota Habis</span>
                     @endif
                 @endif
             </div>
         @empty
-            <p class="text-gray-500 text-sm">Belum ada tiket yang dibuat untuk event ini.</p>
+            <p class="text-zinc-400 text-sm">Belum ada tiket yang dibuat untuk event ini.</p>
         @endforelse
     </div>
 
     @if(auth()->user()->isAdmin())
-        <div class="mt-8 pt-6 border-t">
-            <h3 class="text-lg font-bold text-gray-800 mb-3">Tambah Jenis Tiket Baru</h3>
+        <div class="mt-8 pt-6 border-t border-zinc-800">
+            <h3 class="text-lg font-bold text-white mb-3">Tambah Jenis Tiket Baru</h3>
+
+            @if(\$errors->any())
+                <div class="mb-4 p-3 rounded-lg bg-red-950/80 border border-red-700 text-red-300 text-xs space-y-1">
+                    @foreach($errors->all() as$err)
+                        <p>&bull; {{ \$err }}</p>
+                    @endforeach
+                </div>
+            @endif
+
             <form action="{{ route('tickets.store') }}" method="POST" class="grid md:grid-cols-4 gap-3">
                 @csrf
-                <input type="hidden" name="event_id" value="{{ $event->id }}">
-                <input type="text" name="name" placeholder="Nama Tiket (misal: VIP)" class="border rounded px-3 py-2 text-sm">
-                <input type="number" name="price" placeholder="Harga (Rp)" class="border rounded px-3 py-2 text-sm">
-                <input type="number" name="quota" placeholder="Kuota" class="border rounded px-3 py-2 text-sm">
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded px-4 py-2 text-sm font-semibold">
+                <input type="hidden" name="event_id" value="{{ \$event->id }}">
+                <input type="text" name="name" placeholder="Nama Tiket (misal: VIP)" class="bg-zinc-950 border border-zinc-700 text-zinc-100 placeholder-zinc-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500">
+                <input type="number" name="price" placeholder="Harga (Rp)" class="bg-zinc-950 border border-zinc-700 text-zinc-100 placeholder-zinc-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500">
+                <input type="number" name="quota" placeholder="Kuota" class="bg-zinc-950 border border-zinc-700 text-zinc-100 placeholder-zinc-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500">
+                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white rounded-lg px-4 py-2 text-sm font-bold uppercase tracking-wider transition">
                     + Tambah Tiket
                 </button>
             </form>
         </div>
     @endif
 </div>
-@endsection
+
+{{-- Rekap Peserta & Pendapatan (Khusus Admin, via RegistrationContract) --}}
+@if(auth()->user()->isAdmin() && isset(\$participantReport))
+    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
+            <div>
+                <h2 class="text-xl font-bold uppercase tracking-wide text-white">Rekap Pemesan Tiket</h2>
+                <p class="text-xs text-zinc-400 mt-0.5">Data diambil lintas modul melalui RegistrationContract.</p>
+            </div>
+            <div class="flex gap-3">
+                <div class="bg-zinc-950 border border-zinc-800 px-4 py-2 rounded-lg">
+                    <p class="text-[11px] uppercase text-zinc-400">Tiket Terjual</p>
+                    <p class="text-base font-black text-white">{{ \$participantReport['total_tickets'] }} Tiket</p>
+                </div>
+                <div class="bg-zinc-950 border border-zinc-800 px-4 py-2 rounded-lg">
+                    <p class="text-[11px] uppercase text-zinc-400">Total Pendapatan</p>
+                    <p class="text-base font-black text-emerald-400">Rp {{ number_format(\$participantReport['total_revenue'], 0, ',', '.') }}</p>
+                </div>
+            </div>
+        </div>
+
+        @if(empty(\$participantReport['participants']))
+            <p class="text-sm text-zinc-400 bg-zinc-950 border border-zinc-800 rounded-lg p-4 text-center">
+                Belum ada peserta yang memesan tiket untuk event ini.
+            </p>
+        @else
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-zinc-950 text-zinc-400 text-xs uppercase border-b border-zinc-800">
+                        <tr>
+                            <th class="px-4 py-3">Kode Tiket</th>
+                            <th class="px-4 py-3">Peserta</th>
+                            <th class="px-4 py-3">Jenis Tiket</th>
+                            <th class="px-4 py-3">Qty</th>
+                            <th class="px-4 py-3">Total</th>
+                            <th class="px-4 py-3">Waktu Pesan</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y
