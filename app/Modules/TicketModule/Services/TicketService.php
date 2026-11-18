@@ -18,23 +18,31 @@ class TicketService implements TicketContract
 
     public function findTicket(int $ticketId): ?array
     {
-        $ticket = Ticket::find($ticketId);
-
-        return $ticket ? $ticket->toArray() : null;
+        return Ticket::find($ticketId)?->toArray();
     }
 
-    public function reserveQuota(int $ticketId, int $quantity): array
+    public function reserveQuota(int $ticketId, int $quantity): void
     {
         $ticket = Ticket::where('id', $ticketId)->lockForUpdate()->first();
 
         if (! $ticket || $ticket->quota < $quantity) {
-            throw new QuotaFullException(
-                "Kuota tiket '{$ticket?->name}' tidak mencukupi (tersisa: ".($ticket?->quota ?? 0).').'
-            );
+            throw new QuotaFullException('Maaf, kuota tiket tidak mencukupi atau sudah habis.');
         }
 
         $ticket->decrement('quota', $quantity);
+    }
 
-        return $ticket->fresh()->toArray();
+    public function releaseQuota(int $ticketId, int $quantity): void
+    {
+        $ticket = Ticket::where('id', $ticketId)->lockForUpdate()->first();
+
+        if ($ticket) {
+            $ticket->increment('quota', $quantity);
+        }
+    }
+
+    public function deleteTicketsByEvent(int $eventId): void
+    {
+        Ticket::where('event_id', $eventId)->delete();
     }
 }

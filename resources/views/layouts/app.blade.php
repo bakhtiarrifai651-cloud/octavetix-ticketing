@@ -37,15 +37,17 @@
                                 {{ auth()->user()->role }}
                             </span>
                         </div>
-                        <form action="{{ route('logout') }}" method="POST">
+                        <form action="{{ Route::has('logout') ? route('logout') : url('/logout') }}" method="POST">
                             @csrf
                             <button type="submit" class="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider bg-zinc-800 hover:bg-red-600 text-zinc-200 hover:text-white rounded border border-zinc-700 transition">
                                 Keluar
                             </button>
                         </form>
                     @else
-                        <a href="{{ route('login') }}" class="text-sm text-zinc-300 hover:text-white">Masuk</a>
-                        <a href="{{ route('register') }}" class="px-4 py-2 text-sm font-semibold bg-red-600 hover:bg-red-700 text-white rounded transition">Daftar</a>
+                        <a href="{{ route('login') }}" class="px-4 py-2 text-sm font-semibold bg-red-600 hover:bg-red-700 text-white rounded transition">Masuk</a>
+                        @if (Route::has('register'))
+                            <a href="{{ route('register') }}" class="px-4 py-2 text-sm font-semibold bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded transition">Daftar</a>
+                        @endif
                     @endauth
                 </div>
             </div>
