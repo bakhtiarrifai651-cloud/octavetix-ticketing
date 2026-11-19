@@ -88,7 +88,7 @@ class OctaveTixTest extends TestCase
 
         $this->assertEquals(2, $ticket->fresh()->quota);
 
-        // Pesan sesuai kuota -> berhasil & kuota berkurang
+        // Pesan 2 tiket -> berhasil, kuota habis, dan terbit 2 tiket individual dengan kode unik
         $this->actingAs($peserta)
             ->post('/registrations', [
                 'ticket_id' => $ticket->id,
@@ -97,17 +97,20 @@ class OctaveTixTest extends TestCase
             ->assertRedirect('/my-tickets');
 
         $this->assertEquals(0, $ticket->fresh()->quota);
+        $this->assertDatabaseCount('registrations', 2);
 
-        $registration = Registration::first();
-        $this->assertStringStartsWith('OCT-', $registration->ticket_code);
+        $registrations = Registration::all();
+        $this->assertStringStartsWith('OCT-', $registrations[0]->ticket_code);
+        $this->assertStringStartsWith('OCT-', $registrations[1]->ticket_code);
+        $this->assertNotEquals($registrations[0]->ticket_code, $registrations[1]->ticket_code);
 
-        // Batalkan pesanan -> kuota kembali
+        // Batalkan 1 tiket -> 1 kuota kembali, sisa 1 tiket aktif
         $this->actingAs($peserta)
-            ->delete("/registrations/{$registration->id}")
+            ->delete("/registrations/{$registrations[0]->id}")
             ->assertRedirect('/my-tickets');
 
-        $this->assertEquals(2, $ticket->fresh()->quota);
-        $this->assertDatabaseCount('registrations', 0);
+        $this->assertEquals(1, $ticket->fresh()->quota);
+        $this->assertDatabaseCount('registrations', 1);
     }
 
     public function test_admin_gate_checkin_validation(): void

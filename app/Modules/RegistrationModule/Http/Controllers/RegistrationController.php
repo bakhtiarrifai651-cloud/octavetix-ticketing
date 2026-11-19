@@ -35,14 +35,16 @@ class RegistrationController extends Controller
         ]);
 
         try {
+            $qty = (int) $validated['quantity'];
+
             $this->registrationService->bookTicket(
                 Auth::id(),
                 (int) $validated['ticket_id'],
-                (int) $validated['quantity']
+                $qty
             );
 
             return redirect()->route('registrations.index')
-                ->with('success', 'Tiket berhasil dipesan! E-Ticket & QR Code Anda siap digunakan.');
+                ->with('success', "{$qty} E-Ticket berhasil diterbitkan! Masing-masing tiket memiliki kode & QR Code unik.");
         } catch (QuotaFullException $e) {
             return back()->with('error', $e->getMessage());
         }
@@ -53,7 +55,7 @@ class RegistrationController extends Controller
         $this->registrationService->cancelBooking($id, Auth::id());
 
         return redirect()->route('registrations.index')
-            ->with('success', 'Pemesanan tiket berhasil dibatalkan dan kuota telah dikembalikan.');
+            ->with('success', 'Tiket berhasil dibatalkan dan 1 kuota telah dikembalikan.');
     }
 
     public function checkIn(Request $request, int $eventId): RedirectResponse

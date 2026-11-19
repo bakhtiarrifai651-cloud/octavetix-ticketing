@@ -17,7 +17,7 @@ class RegistrationService implements RegistrationContract
         protected TicketContract $ticketContract
     ) {}
 
-    public function bookTicket(int $userId, int $ticketId, int $quantity): Registration
+    public function bookTicket(int $userId, int $ticketId, int $quantity): array
     {
         return DB::transaction(function () use ($userId, $ticketId, $quantity) {
             $ticket = $this->ticketContract->findTicket($ticketId);
@@ -26,20 +26,33 @@ class RegistrationService implements RegistrationContract
                 throw new QuotaFullException('Jenis tiket tidak ditemukan.');
             }
 
+            // Kunci & kurangi total kuota sekaligus secara atomik
             $this->ticketContract->reserveQuota($ticketId, $quantity);
 
-            $data = [
-                'user_id' => $userId,
-                'ticket_id' => $ticketId,
-                'quantity' => $quantity,
-                'ticket_code' => 'OCT-'.strtoupper(Str::random(6)),
-            ];
+            $hasTotalPrice = Schema::hasColumn('registrations', 'total_price');
+            $issuedTickets = [];
 
-            if (Schema::hasColumn('registrations', 'total_price')) {
-                $data['total_price'] = $ticket['price'] * $quantity;
+            // Terbitkan 1 E-Ticket & kode unik untuk setiap lembar tiket
+            for ($i = 0; $i < $quantity; $i++) {
+                do {
+                    $code = 'OCT-'.strtoupper(Str::random(6));
+                } while (Registration::where('ticket_code', $code)->exists());
+
+                $data = [
+                    'user_id' => $userId,
+                    'ticket_id' => $ticketId,
+                    'quantity' => 1,
+                    'ticket_code' => $code,
+                ];
+
+                if ($hasTotalPrice) {
+                    $data['total_price'] = $ticket['price'];
+                }
+
+                $issuedTickets[] = Registration::create($data);
             }
 
-            return Registration::create($data);
+            return $issuedTickets;
         });
     }
 
